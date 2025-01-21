@@ -34,5 +34,3 @@ Finally, we proceed with the deployment.
 ```
 terraform apply -auto-approve
 ```
-
-[Go To Repo](https://docs.aws.amazon.com/eks/latest/userguide/aws-load-balancer-controller.html)

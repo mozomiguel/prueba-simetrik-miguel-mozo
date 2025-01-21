@@ -48,6 +48,7 @@ spec:
       protocol: TCP
 ---
 # Create the ingress that deploy the ALB
+# Important clarification: To ensure the Ingress is correctly configured, you must uncomment the commented lines and replace <ACM_ARN> with the ARN of an SSL certificate.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -58,8 +59,11 @@ metadata:
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/group.name: server-app
     alb.ingress.kubernetes.io/load-balancer-name: server-app-alb
-    alb.ingress.kubernetes.io/backend-protocol: HTTP
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+    # alb.ingress.kubernetes.io/certificate-arn: <ACM_ARN>
+    # alb.ingress.kubernetes.io/ssl-redirect: "443"
+    # alb.ingress.kubernetes.io/backend-protocol-version: "GRPC"
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
 spec:
   ingressClassName: alb
   rules:
