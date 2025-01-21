@@ -1,0 +1,6 @@
+FROM python:3.8
+RUN pip install protobuf grpcio grpcio-tools
+COPY client.py .
+COPY message_service_pb2.py .
+COPY message_service_pb2_grpc.py .
+CMD python client.py

@@ -1,0 +1,23 @@
+version: 0.2
+# Deployment template for the app in the EKS cluster
+phases:
+  install:
+    commands:
+      - sudo yum install -y docker
+  pre_build:
+    commands:
+      - cd app/
+      - pip3 install grpcio grpcio-tools
+      - python -m grpc_tools.protoc -I. --python_out=. --grpc_python_out=. message_service.proto
+  build:
+    commands:
+      - sudo docker build -t message_service_server -f Dockerfile.server .
+      - sudo docker build -t message_service_client -f Dockerfile.client .
+      - sudo docker tag message_service_server "$ECR_REPO":latest_server
+      - sudo docker tag message_service_client "$ECR_REPO":latest_client
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | sudo docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - sudo docker push "$ECR_REPO":latest_server
+      - sudo docker push "$ECR_REPO":latest_client
+  post_build:
+    commands:
+      - echo Build completed on `date`

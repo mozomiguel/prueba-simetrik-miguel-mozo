@@ -1,0 +1,25 @@
+version: 0.2
+# build template for server and client
+
+phases:
+  install:
+    commands:
+      - sudo yum install -y docker
+  pre_build:
+    commands:
+      - aws ecr get-login-password --region $AWS_DEFAULT_REGION | sudo docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com
+      - aws eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_DEFAULT_REGION
+      - export REPO_SERVER="$ECR_REPO":latest_server
+      - export REPO_CLIENT="$ECR_REPO":latest_client
+      - echo $REPO_SERVER
+  build:
+    commands:
+      - envsubst < kubernetes_manifests/server.yaml | kubectl apply -f -
+      - chmod +x wait_for_alb.sh
+      - ./wait_for_alb.sh
+      - export ALB_ADDRESS=$(kubectl get ingress server-app-ingress -n server -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null)
+      - echo $ALB_ADDRESS
+      - envsubst < kubernetes_manifests/client.yaml | kubectl apply -f -
+  post_build:
+    commands:
+      - echo Build completed on `date`

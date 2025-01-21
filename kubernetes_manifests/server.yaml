@@ -1,0 +1,74 @@
+# Kubernetes resources for the app server
+# Create a namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: server
+spec: {}
+status: {}
+---
+# Create the app deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: server-app
+  namespace: server
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: server-app
+  template:
+    metadata:
+      labels:
+        app: server-app
+    spec:
+      containers:
+      - name: server-app
+        image: ${REPO_SERVER}
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 50051
+---
+# Create the service for the server
+apiVersion: v1
+kind: Service
+metadata:
+  name: server-app-service
+  namespace: server
+  labels:
+    app: server-app
+spec:
+  type: ClusterIP
+  selector:
+    app: server-app
+  ports:
+    - port: 50051        # Port exposed by the service
+      targetPort: 50051  # Port your container is listening on
+      protocol: TCP
+---
+# Create the ingress that deploy the ALB
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: server-app-ingress
+  namespace: server
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: server-app
+    alb.ingress.kubernetes.io/load-balancer-name: server-app-alb
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: server-app-service
+                port:
+                  number: 50051

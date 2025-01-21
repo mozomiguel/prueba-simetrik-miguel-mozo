@@ -1,0 +1,32 @@
+# Kubernetes resources to deploy the client app
+# Create a namespace for the client
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: client
+spec: {}
+status: {}
+---
+# Create the deployment for the client app
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: client-app
+  namespace: client
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: client-app
+  template:
+    metadata:
+      labels:
+        app: client-app
+    spec:
+      containers:
+      - name: client-app
+        image: ${REPO_CLIENT}
+        imagePullPolicy: Always
+        env:
+        - name: ALB_ADDRESS
+          value: "${ALB_ADDRESS}"
